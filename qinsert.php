@@ -2,26 +2,18 @@
 	include 'connect.php';
 	include 'header.php';
 	
-	$q = $_REQUEST['question'];
-	$tech1 = $_REQUEST['tech1'];
-	$diff1 = $_REQUEST['diff1'];
-	$tech2 = $_REQUEST['tech2'];
-	$diff2 = $_REQUEST['diff2'];
-	$dbh = $_REQUEST['dbh'];
-	$t1 = false;
-	$t2 = false;
-// 	$msg = "insertion complete: '$q' at ID";
+	$q = $_REQUEST['question'];	// the actual question text
+// 	$dbh = $_REQUEST['dbh'];	// for prepared statements
 	
-	// not auto-incrementing question IDs. So get the max and add one for insertion
+	// not auto-incrementing QUESTION.id. So get the max and add one for insertion
 	$qid = mysql_fetch_array(mysql_query("SELECT MAX(Q.id) as id FROM QUESTION Q"))['id'] +1;
-// 	$msg = "$msg $qid.";
 		
 //  	$insert1 = $dbh->prepare("INSERT INTO QUESTION (id, question) VALUES (:id, :name)");
 //  	$insert1->bindParam(":id", $qid); $insert1->bindParam(":question", $q);
 //  	$insert1->execute();
  	mysql_query("INSERT INTO QUESTION (id, question) VALUES ($qid, '$q')");
 
-	if (mysql_errno() == 1062) {
+	if (mysql_errno() == 1062) {	// duplicate question
 ?>
 
 <table border=1>
@@ -39,57 +31,23 @@
 </table>
 
 <?php
-	} else {
-		if ($diff1 != 0) {
-			$t1 = true;
-// 	  		$insert2 = $dbh->prepare("INSERT INTO DIFFICULTY (question, tech, degree) VALUES (:question, :tech, :degree)");
-// 	  		$insert2->bindParam(":question", $qid); $insert2->bindParam(":tech", $tech1); $insert2->bindParam(":degree", $diff1);
-// 	  		$insert2->execute();
-			mysql_query("INSERT INTO DIFFICULTY (question, tech, degree) VALUES ($qid, $tech1, $diff1)");
+	} else {	// no duplicate errors. Insert the question
+		echo "<table border=1><tr><th colspan=4>Insertion Complete</th></tr>";
+		echo "<tr><th>Question</th><td colspan=3>$q</td></tr>";
+		echo "<tr><th>ID</th><td>$qid</td></tr>";
+		$maxTech = mysql_fetch_array(mysql_query("SELECT MAX(T.id) AS id FROM tech as T"))['id'];
+		for ($t=1; $t<=$maxTech; $t++) {
+			$tech = $_REQUEST["tech$t"];	// TECH.id
+			$diff = $_REQUEST["diff$t"];	// DIFFICULTY.degree
+			$techName = mysql_fetch_array(mysql_query("SELECT T.name FROM tech AS T WHERE T.id=$tech"))['name'];	// TECH.name for displaying insertion confirmation
 			
-			$tech1 = mysql_fetch_array(mysql_query("SELECT name FROM TECH where id=$tech1"))['name'];
-// 		$msg = "$msg With $t1 difficulty = $diff1.";
+			if ($diff != 0) {	// difficulty set. Not to be ignored
+				mysql_query("INSERT INTO difficulty (question, tech, degree) VALUES ($qid, $tech, $diff)");
+				echo "<tr><th>Tech</th><td>$techName</td><th>Diff</th><td>$diff</td></tr>";
+			}
 		}
-		
-		if($diff2 != 0) {
-			$t2 = true;
-//  		$insert3 = $dbh->prepare("INSERT INTO DIFFICULTY (question, tech, degree) VALUES (:question, :tech, :degree)");
-//  		$insert3->bindParam(":question", $qid); $insert3->bindParam(":tech", $tech2); $insert3->bindParam(":degree", $diff2);
-			mysql_query("INSERT INTO DIFFICULTY (question, tech, degree) VALUES ($qid, $tech2, $diff2)");
-			
-			$tech2 = mysql_fetch_array(mysql_query("SELECT name FROM TECH where id=$tech2"))['name'];
-// 		$msg = "$msg With $t2 difficulty = $diff2.";
-		}
+		echo "</table>";
+	}
 ?>
 
-<table border=1>
-	<tr>
-		<th colspan=4>Insertion Complete</th>
-	<tr>
-	<tr>
-		<th>Question ID</th>
-		<td colspan=3><?= $qid ?></td>
-	</tr>
-	<tr>
-		<th>Question</th>
-		<td colspan=3><?= $q ?></td>
-	</tr>
-	<?php if($t1) { ?>
-		<tr>
-			<th>Tech 1</th>
-			<td><?= $tech1 ?></td>
-			<th>Difficulty 1</th>
-			<td><?= $diff1 ?></td>
-		</tr>
-	<?php } ?>
-	<?php if($t2) { ?>
-		<tr>
-			<th>Tech 2</th>
-			<td><?= $tech2 ?></td>
-			<th>Difficulty 2</th>
-			<td><?= $diff2 ?></td>
-		</tr>
-	<?php } ?>
-</table>
-
-<?php } include 'footer.php'; ?>
+<?php include 'footer.php'; ?>

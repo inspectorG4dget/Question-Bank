@@ -7,7 +7,7 @@
 ?>
 
 <table border=1>
-<tr><th>Questions</th></tr>
+<tr><th>All Questions</th></tr>
 <?php
 	while ($row = mysql_fetch_array($result)) {
 		$q = $row['question'];

@@ -13,14 +13,14 @@
 //	 	$insert1->execute();
 		
 		mysql_query("INSERT INTO TECH (id, name) VALUES ($tid, '$tech')");
-		if (mysql_errno() == 1062) {
-			$inserted = 0; // already exists
+		if (mysql_errno() == 1062) {	// duplicate insert error
+			$inserted = 0; // already exists (internal error code for use while displaying insertion results)
 		} else {
-			$inserted = 1;	// inserted
+			$inserted = 1;	// inserted (internal error code for use while displaying insertion results)
 		}
 		
-	} else {
-		$inserted = -1; // empty string
+	} else {	No duplicate inserion errors
+		$inserted = -1; // empty string (internal error code for use while displaying insertion results)
 	}
 ?>
 <table border=1>
@@ -30,7 +30,7 @@
 	<tr>
 		<td>
 			<?php
-				switch ($inserted) {
+				switch ($inserted) {	// using the internal error codes set above
 					case -1:
 						echo "Empty string will not be inserted";
 						break;
